@@ -45,6 +45,21 @@ export default function AdminHome() {
             </Link>
           </CardContent>
         </Card>
+
+        <Card className="border-gray-200 hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <Microscope className="h-10 w-10 text-purple-600 mb-2" />
+            <CardTitle>Doctor Portal</CardTitle>
+            <CardDescription>Manage appointments, patient reports & prescriptions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link to="/doctor">
+              <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                Open Doctor Portal
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Quick Actions */}
