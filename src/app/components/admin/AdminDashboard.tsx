@@ -16,7 +16,6 @@ export default function AdminDashboard({ userName, onLogout }: AdminDashboardPro
     { label: 'Dashboard', path: '/admin', icon: <LayoutGrid className="h-5 w-5" /> },
     { label: 'Pharmacist Portal', path: '/admin/pharmacist', icon: <Pill className="h-5 w-5" /> },
     { label: 'Lab Technician Portal', path: '/admin/lab', icon: <Microscope className="h-5 w-5" /> },
-    { label: 'Upload Reports', path: '/admin/reports', icon: <FileText className="h-5 w-5" /> },
     { label: 'Reschedule Appointments', path: '/admin/appointments', icon: <Calendar className="h-5 w-5" /> },
   ];
 
