@@ -80,7 +80,7 @@ function App() {
         <Route 
           path="/doctor/*" 
           element={
-            currentUser?.role === 'doctor' || currentUser?.role === 'admin' ? (
+            currentUser?.role === 'doctor' ? (
               <DoctorDashboard userName={currentUser.name} onLogout={handleLogout} />
             ) : (
               <Navigate to="/" replace />

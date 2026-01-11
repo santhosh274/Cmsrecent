@@ -45,18 +45,30 @@ export default function AdminHome() {
             </Link>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="border-gray-200 hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <FileText className="h-10 w-10 text-blue-600 mb-2" />
+            <CardTitle>Upload Reports</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Link to="/admin/reports">
+              <Button variant="outline" className="w-full">Upload Reports</Button>
+            </Link>
+          </CardContent>
+        </Card>
 
         <Card className="border-gray-200 hover:shadow-lg transition-shadow">
           <CardHeader>
-            <Microscope className="h-10 w-10 text-purple-600 mb-2" />
-            <CardTitle>Doctor Portal</CardTitle>
-            <CardDescription>Manage appointments, patient reports & prescriptions</CardDescription>
+            <Calendar className="h-10 w-10 text-blue-600 mb-2" />
+            <CardTitle>Reschedule Appointments</CardTitle>
           </CardHeader>
           <CardContent>
-            <Link to="/doctor">
-              <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                Open Doctor Portal
-              </Button>
+            <Link to="/admin/appointments">
+              <Button variant="outline" className="w-full">Manage Appointments</Button>
             </Link>
           </CardContent>
         </Card>
