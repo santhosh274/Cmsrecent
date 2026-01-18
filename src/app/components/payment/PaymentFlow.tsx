@@ -439,7 +439,7 @@ export default function PaymentFlow({
                   <span className="text-gray-900">₹{consultationFee}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Platform Fee</span>
+                  <span className="text-gray-600">Booking Fee(refundable)</span>
                   <span className="text-gray-900">₹{platformFee}</span>
                 </div>
                 <div className="flex justify-between text-sm">

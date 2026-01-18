@@ -111,7 +111,7 @@ export default function Payment({
                     <span className="font-medium">₹{consultationFee}</span>
                   </div>
                   <div className="flex justify-between mb-2">
-                    <span className="text-sm">Platform Fee</span>
+                    <span className="text-sm">Booking Fee(refundable)</span>
                     <span className="font-medium">₹{platformFee}</span>
                   </div>
                   <div className="flex justify-between border-t pt-2">
