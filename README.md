@@ -1,7 +1,7 @@
 
-  # Clinic Management System Design (Copy)
+  # Clinic Management System Design
 
-  This is a code bundle for Clinic Management System Design (Copy). The original project is available at https://www.figma.com/design/ps4FUFoLxXlqB6hVJjdNoS/Clinic-Management-System-Design--Copy-.
+  This is a code bundle for Clinic Management System Design.
 
   ## Running the code
 
