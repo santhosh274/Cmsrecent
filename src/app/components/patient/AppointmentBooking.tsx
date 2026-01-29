@@ -276,7 +276,7 @@ export default function AppointmentBooking({ isNewUser = false }: AppointmentBoo
                   <span className="font-medium">₹{selectedDoctorData.fee}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Platform Fee</span>
+                  <span className="text-sm">Booking Fee(refundable)</span>
                   <span className="font-medium">₹20</span>
                 </div>
                 <div className="flex justify-between border-t pt-2 mt-2">

@@ -15,6 +15,7 @@ export default function AdminDashboard({ userName, onLogout }: AdminDashboardPro
   const navigation = [
     { label: 'Dashboard', path: '/admin', icon: <LayoutGrid className="h-5 w-5" /> },
     { label: 'Pharmacist Portal', path: '/admin/pharmacist', icon: <Pill className="h-5 w-5" /> },
+    { label: 'Accountant Portal', path: '/accountant', icon: <Pill className="h-5 w-5" /> },
     { label: 'Lab Technician Portal', path: '/admin/lab', icon: <Microscope className="h-5 w-5" /> },
     { label: 'Reschedule Appointments', path: '/admin/appointments', icon: <Calendar className="h-5 w-5" /> },
   ];

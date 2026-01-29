@@ -13,9 +13,9 @@ export default function SuperAdminDashboard({ userName, onLogout }: SuperAdminDa
   const navigation = [
     { label: 'Dashboard', path: '/superadmin', icon: <Shield className="h-5 w-5" /> },
     { label: 'Role Assignment', path: '/superadmin/roles', icon: <UserCog className="h-5 w-5" /> },
-    { label: 'User Management', path: '/superadmin/users', icon: <Users className="h-5 w-5" /> },
+    
   ];
-
+//
   return (
     <DashboardLayout
       userName={userName}

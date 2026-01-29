@@ -1,12 +1,13 @@
 import { useState } from 'react';
+import { Pill, User, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Label } from '../ui/label';
-import { Pill, User, CreditCard } from 'lucide-react';
-import BillingSummary from '../shared/BillingSummary';
-import BackButton from '../shared/BackButton';
 import { toast } from 'sonner';
+
+import DashboardLayout from '../shared/DashboardLayout';
+import BillingSummary from '../shared/BillingSummary';
 
 interface Patient {
   id: string;
@@ -14,9 +15,17 @@ interface Patient {
   phone: string;
 }
 
-export default function PharmacistPortal() {
-  const [selectedPatient, setSelectedPatient] = useState<string>('');
-  
+interface PharmacistPortalProps {
+  userName: string;
+  onLogout: () => void;
+}
+
+export default function PharmacistPortal({
+  userName,
+  onLogout,
+}: PharmacistPortalProps) {
+  const [selectedPatient, setSelectedPatient] = useState('');
+
   const patients: Patient[] = [
     { id: 'p1', name: 'John Patient', phone: '9876543210' },
     { id: 'p2', name: 'Sarah Patient', phone: '9876543220' },
@@ -42,26 +51,28 @@ export default function PharmacistPortal() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <BackButton to="/admin" />
-        <h1 className="text-3xl text-gray-900 mt-4 flex items-center gap-3">
+    <DashboardLayout
+      userName={userName}
+      userRole="Pharmacist"
+      navigation={[]}   // No sidebar items for now
+      onLogout={onLogout}
+    >
+      <div className="space-y-6">
+        {/* Header */}
+        <h1 className="text-3xl text-gray-900 flex items-center gap-3">
           <Pill className="w-8 h-8 text-pink-600" />
           Pharmacist Portal
         </h1>
-      </div>
 
-      {/* Patient Selection */}
-      <Card className="border-gray-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="w-5 h-5 text-blue-600" />
-            Select Patient
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
+        {/* Patient Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5 text-blue-600" />
+              Select Patient
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             <Label htmlFor="patient">Patient</Label>
             <Select value={selectedPatient} onValueChange={setSelectedPatient}>
               <SelectTrigger id="patient">
@@ -75,62 +86,59 @@ export default function PharmacistPortal() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Billing Summary */}
-      {selectedPatient && selectedPatientData && (
-        <>
-          <BillingSummary
-            patientName={selectedPatientData.name}
-            patientId={selectedPatientData.id.toUpperCase()}
-            billingData={sampleBillingData}
-            readOnly={false}
-          />
+        {/* Billing Summary */}
+        {selectedPatient && selectedPatientData && (
+          <>
+            <BillingSummary
+              patientName={selectedPatientData.name}
+              patientId={selectedPatientData.id.toUpperCase()}
+              billingData={sampleBillingData}
+              readOnly={false}
+            />
 
-          {/* Payment Actions */}
-          <Card className="border-gray-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-green-600" />
-                Payment Actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <Button 
+            {/* Payment Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-green-600" />
+                  Payment Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
                   onClick={handleConfirmPayment}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full bg-green-600 hover:bg-green-700"
                 >
                   Confirm Payment
                 </Button>
+
                 <div className="grid grid-cols-3 gap-3">
-                  <Button variant="outline" className="w-full">
-                    Cash
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    Card
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    UPI
-                  </Button>
+                  <Button variant="outline">Cash</Button>
+                  <Button variant="outline">Card</Button>
+                  <Button variant="outline">UPI</Button>
                 </div>
-                <Button variant="outline" className="w-full text-red-600 hover:bg-red-50">
+
+                <Button
+                  variant="outline"
+                  className="w-full text-red-600 hover:bg-red-50"
+                >
                   Cancel Transaction
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
+              </CardContent>
+            </Card>
+          </>
+        )}
 
-      {!selectedPatient && (
-        <div className="text-center py-12 text-gray-500">
-          <Pill className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-          <p>Select a patient to view billing and process payment</p>
-        </div>
-      )}
-    </div>
+        {!selectedPatient && (
+          <div className="text-center py-12 text-gray-500">
+            <Pill className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <p>Select a patient to view billing and process payment</p>
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

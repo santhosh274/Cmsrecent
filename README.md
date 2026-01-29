@@ -2,7 +2,7 @@
   # Clinic Management System Design
 
   This is a code bundle for Clinic Management System Design.
-
+  This is a code bundle for Clinic Management System Design
   ## Running the code
 
   Run `npm i` to install the dependencies.
