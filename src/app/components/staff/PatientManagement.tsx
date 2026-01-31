@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, FileUp, History, Eye } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
@@ -12,20 +12,32 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
-
-const patients = [
-  { id: '1', name: 'John Smith', age: 42, phone: '+1 234 567 8900', lastVisit: 'Jan 2, 2026', status: 'active' },
-  { id: '2', name: 'Emma Davis', age: 28, phone: '+1 234 567 8901', lastVisit: 'Dec 28, 2025', status: 'active' },
-  { id: '3', name: 'Michael Brown', age: 35, phone: '+1 234 567 8902', lastVisit: 'Dec 20, 2025', status: 'active' },
-  { id: '4', name: 'Sarah Wilson', age: 51, phone: '+1 234 567 8903', lastVisit: 'Nov 15, 2025', status: 'inactive' },
-];
+import { fetchPatients, Patient } from '../services/patientService';
+import { toast } from 'sonner';
 
 export default function PatientManagement() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadPatients() {
+      try {
+        const data = await fetchPatients();
+        setPatients(data);
+      } catch (err) {
+        console.error('Failed to fetch patients:', err);
+        toast.error('Failed to load patients');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadPatients();
+  }, []);
 
   const filteredPatients = patients.filter(patient =>
     patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.phone.includes(searchQuery)
+    (patient.phone && patient.phone.includes(searchQuery))
   );
 
   return (
@@ -60,54 +72,60 @@ export default function PatientManagement() {
       <Card className="border-gray-200">
         <CardHeader>
           <CardTitle>Patient List</CardTitle>
-          <CardDescription>{filteredPatients.length} patients found</CardDescription>
+          <CardDescription>
+            {loading ? 'Loading patients...' : `${filteredPatients.length} patients found`}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Patient Name</TableHead>
-                <TableHead>Age</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Last Visit</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPatients.map((patient) => (
-                <TableRow key={patient.id}>
-                  <TableCell className="text-gray-900">{patient.name}</TableCell>
-                  <TableCell className="text-gray-600">{patient.age}</TableCell>
-                  <TableCell className="text-gray-600">{patient.phone}</TableCell>
-                  <TableCell className="text-gray-600">{patient.lastVisit}</TableCell>
-                  <TableCell>
-                    {patient.status === 'active' ? (
-                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>
-                    ) : (
-                      <Badge variant="secondary">Inactive</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        <Eye className="h-4 w-4" />
-                        View
-                      </Button>
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        <History className="h-4 w-4" />
-                        History
-                      </Button>
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        <FileUp className="h-4 w-4" />
-                        Upload
-                      </Button>
-                    </div>
-                  </TableCell>
+          {loading ? (
+            <p className="text-gray-600">Loading patients...</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Patient Name</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredPatients.length > 0 ? (
+                  filteredPatients.map((patient) => (
+                    <TableRow key={patient.id}>
+                      <TableCell className="text-gray-900">{patient.name}</TableCell>
+                      <TableCell className="text-gray-600">{patient.phone || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="sm" className="gap-1">
+                            <Eye className="h-4 w-4" />
+                            View
+                          </Button>
+                          <Button variant="ghost" size="sm" className="gap-1">
+                            <History className="h-4 w-4" />
+                            History
+                          </Button>
+                          <Button variant="ghost" size="sm" className="gap-1">
+                            <FileUp className="h-4 w-4" />
+                            Upload
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-gray-500">
+                      No patients found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

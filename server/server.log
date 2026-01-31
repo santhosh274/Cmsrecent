@@ -1,0 +1,285 @@
+[dotenv@17.2.3] injecting env (6) from .env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+Server running on port 5000
+Environment: development
+Connected to PostgreSQL database
+Executed query {
+  text: 'SELECT id, name, email, role, password_hash FROM users WHERE email = $1 LIMIT 1',
+  duration: 48,
+  rows: 1
+}
+Executed query {
+  text: 'SELECT id, name, email, role, password_hash FROM users WHERE email = $1 LIMIT 1',
+  duration: 46,
+  rows: 1
+}
+Database query error: error: relation "appointments" does not exist
+    at d:\script\Cmsrecent - Copy\server\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///d:/script/Cmsrecent%20-%20Copy/server/db.js:31:17)
+    at async file:///d:/script/Cmsrecent%20-%20Copy/server/routes/appointments.js:10:20 {
+  length: 111,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '15',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1469',
+  routine: 'parserOpenTable'
+}
+List appointments error error: relation "appointments" does not exist
+    at d:\script\Cmsrecent - Copy\server\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///d:/script/Cmsrecent%20-%20Copy/server/db.js:31:17)
+    at async file:///d:/script/Cmsrecent%20-%20Copy/server/routes/appointments.js:10:20 {
+  length: 111,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '15',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1469',
+  routine: 'parserOpenTable'
+}
+Executed query {
+  text: 'SELECT id, name, phone FROM patients ORDER BY name',
+  duration: 47,
+  rows: 6
+}
+Executed query {
+  text: 'SELECT id, name, phone FROM patients ORDER BY name',
+  duration: 1,
+  rows: 6
+}
+Database query error: error: relation "lab_reports" does not exist
+    at d:\script\Cmsrecent - Copy\server\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///d:/script/Cmsrecent%20-%20Copy/server/db.js:31:17)
+    at async file:///d:/script/Cmsrecent%20-%20Copy/server/routes/labReports.js:23:20 {
+  length: 110,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '15',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1469',
+  routine: 'parserOpenTable'
+}
+List lab reports error error: relation "lab_reports" does not exist
+    at d:\script\Cmsrecent - Copy\server\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///d:/script/Cmsrecent%20-%20Copy/server/db.js:31:17)
+    at async file:///d:/script/Cmsrecent%20-%20Copy/server/routes/labReports.js:23:20 {
+  length: 110,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '15',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1469',
+  routine: 'parserOpenTable'
+}
+Database query error: error: relation "appointments" does not exist
+    at d:\script\Cmsrecent - Copy\server\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///d:/script/Cmsrecent%20-%20Copy/server/db.js:31:17)
+    at async file:///d:/script/Cmsrecent%20-%20Copy/server/routes/appointments.js:10:20 {
+  length: 111,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '15',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1469',
+  routine: 'parserOpenTable'
+}
+List appointments error error: relation "appointments" does not exist
+    at d:\script\Cmsrecent - Copy\server\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///d:/script/Cmsrecent%20-%20Copy/server/db.js:31:17)
+    at async file:///d:/script/Cmsrecent%20-%20Copy/server/routes/appointments.js:10:20 {
+  length: 111,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '15',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1469',
+  routine: 'parserOpenTable'
+}
+Executed query {
+  text: 'SELECT id, name, phone FROM patients ORDER BY name',
+  duration: 59,
+  rows: 6
+}
+Executed query {
+  text: 'SELECT id, name, phone FROM patients ORDER BY name',
+  duration: 1,
+  rows: 6
+}
+Database query error: error: relation "appointments" does not exist
+    at d:\script\Cmsrecent - Copy\server\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///d:/script/Cmsrecent%20-%20Copy/server/db.js:31:17)
+    at async file:///d:/script/Cmsrecent%20-%20Copy/server/routes/appointments.js:10:20 {
+  length: 111,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '15',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1469',
+  routine: 'parserOpenTable'
+}
+List appointments error error: relation "appointments" does not exist
+    at d:\script\Cmsrecent - Copy\server\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///d:/script/Cmsrecent%20-%20Copy/server/db.js:31:17)
+    at async file:///d:/script/Cmsrecent%20-%20Copy/server/routes/appointments.js:10:20 {
+  length: 111,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '15',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1469',
+  routine: 'parserOpenTable'
+}
+Executed query {
+  text: 'SELECT id, name, email, role, password_hash FROM users WHERE email = $1 LIMIT 1',
+  duration: 52,
+  rows: 1
+}
+Executed query {
+  text: 'SELECT id, name, phone FROM patients ORDER BY name',
+  duration: 2,
+  rows: 6
+}
+Executed query {
+  text: 'SELECT id, name, email, role, password_hash FROM users WHERE email = $1 LIMIT 1',
+  duration: 47,
+  rows: 1
+}
+Executed query {
+  text: 'SELECT id, name, phone FROM patients ORDER BY name',
+  duration: 2,
+  rows: 6
+}
+Executed query {
+  text: "SELECT id, name, phone, metadata, (SELECT json_agg(json_build_object('id',id,'name',name,'relationship',relationship)) FROM patient_family_members WHERE patient_id = patients.id) AS family_members FROM patients WHERE id = $1 LIMIT 1",
+  duration: 4,
+  rows: 1
+}
+Executed query {
+  text: 'SELECT id, name, email, role, password_hash FROM users WHERE email = $1 LIMIT 1',
+  duration: 87,
+  rows: 1
+}
+Executed query {
+  text: 'SELECT id, name, email, role, password_hash FROM users WHERE email = $1 LIMIT 1',
+  duration: 1,
+  rows: 1
+}
+Executed query {
+  text: 'SELECT id, name, phone FROM patients ORDER BY name',
+  duration: 2,
+  rows: 6
+}
+Executed query {
+  text: "SELECT id, name, phone, metadata, (SELECT json_agg(json_build_object('id',id,'name',name,'relationship',relationship)) FROM patient_family_members WHERE patient_id = patients.id) AS family_members FROM patients WHERE id = $1 LIMIT 1",
+  duration: 2,
+  rows: 1
+}
+Executed query {
+  text: 'SELECT id, name, email, role, password_hash FROM users WHERE email = $1 LIMIT 1',
+  duration: 64,
+  rows: 1
+}
+Executed query {
+  text: 'SELECT id, name, phone FROM patients ORDER BY name',
+  duration: 2,
+  rows: 6
+}
+Executed query {
+  text: "SELECT id, name, phone, metadata, (SELECT json_agg(json_build_object('id',id,'name',name,'relationship',relationship)) FROM patient_family_members WHERE patient_id = patients.id) AS family_members FROM patients WHERE id = $1 LIMIT 1",
+  duration: 2,
+  rows: 1
+}
+Connected to PostgreSQL database
+Connected to PostgreSQL database
+Connected to PostgreSQL database
+Connected to PostgreSQL database

@@ -1,241 +1,229 @@
-import { useState } from 'react';
-import { UserPlus, Shield, Edit, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { UserPlus, Shield, Edit, Trash2, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
-const users = [
-  { id: '1', name: 'Dr. Sarah Johnson', email: 'sarah.j@clinic.com', role: 'doctor', status: 'active', lastLogin: 'Jan 4, 2026' },
-  { id: '2', name: 'Dr. Michael Chen', email: 'michael.c@clinic.com', role: 'doctor', status: 'active', lastLogin: 'Jan 4, 2026' },
-  { id: '3', name: 'Mary Reception', email: 'mary.r@clinic.com', role: 'staff', status: 'active', lastLogin: 'Jan 4, 2026' },
-  { id: '4', name: 'Lab Tech Jones', email: 'lab.j@clinic.com', role: 'lab', status: 'active', lastLogin: 'Jan 3, 2026' },
-  { id: '5', name: 'Pharmacist Lee', email: 'pharma.l@clinic.com', role: 'pharmacy', status: 'active', lastLogin: 'Jan 4, 2026' },
-  { id: '6', name: 'Admin User', email: 'admin@clinic.com', role: 'admin', status: 'active', lastLogin: 'Jan 4, 2026' },
-];
+// Added updateUser to the imports
+import { fetchUsers, createUser, deleteUser, updateUser, User } from '../services/userService';
 
 const roleColors: Record<string, string> = {
+  superadmin: 'bg-red-100 text-red-800',
   doctor: 'bg-blue-100 text-blue-800',
   staff: 'bg-purple-100 text-purple-800',
   lab: 'bg-green-100 text-green-800',
   pharmacy: 'bg-yellow-100 text-yellow-800',
-  admin: 'bg-red-100 text-red-800',
+  accountant: 'bg-orange-100 text-orange-800',
 };
 
 export default function RoleManagement() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<typeof users[0] | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
-  const handleEditUser = (user: typeof users[0]) => {
-    setSelectedUser(user);
+  // Form State for Adding
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: 'staff',
+    password: ''
+  });
+
+  // Form State for Editing
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    role: '',
+    status: ''
+  });
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const data = await fetchUsers();
+      setUsers(data);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // --- Handlers ---
+
+  const handleCreateUser = async () => {
+    if (!formData.name || !formData.email || !formData.password) {
+      return toast.error("Please fill in all fields");
+    }
+    try {
+      await createUser(formData);
+      toast.success("User created successfully");
+      setShowAddDialog(false);
+      setFormData({ name: '', email: '', role: 'staff', password: '' });
+      loadData();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleEditClick = (user: User) => {
+    setEditingUser(user);
+    setEditFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status
+    });
     setShowEditDialog(true);
   };
 
+  const handleUpdateUser = async () => {
+    if (!editingUser) return;
+    
+    try {
+      await updateUser(editingUser.id, editFormData);
+      toast.success("User updated successfully");
+      setShowEditDialog(false);
+      loadData();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to revoke this user's access?")) return;
+    try {
+      await deleteUser(id);
+      toast.success("Access revoked");
+      loadData();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl text-gray-900">User & Role Management</h1>
-          <p className="text-gray-600 mt-2">Manage system access and user permissions</p>
+          <h1 className="text-3xl font-bold">User Management</h1>
+          <p className="text-gray-500">Control system access and roles</p>
         </div>
-        <Button onClick={() => setShowAddDialog(true)} className="gap-2">
-          <UserPlus className="h-4 w-4" />
-          Add User
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={loadData} disabled={isLoading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button className="bg-blue-600" onClick={() => setShowAddDialog(true)}>
+            <UserPlus className="w-4 h-4 mr-2" />
+            Add New User
+          </Button>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <Card className="border-gray-200">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl text-gray-900">{users.length}</p>
-              <p className="text-sm text-gray-600 mt-1">Total Users</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-gray-200">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl text-blue-600">{users.filter(u => u.role === 'doctor').length}</p>
-              <p className="text-sm text-gray-600 mt-1">Doctors</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-gray-200">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl text-purple-600">{users.filter(u => u.role === 'staff').length}</p>
-              <p className="text-sm text-gray-600 mt-1">Staff</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-gray-200">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl text-green-600">{users.filter(u => u.role === 'lab').length}</p>
-              <p className="text-sm text-gray-600 mt-1">Lab Tech</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-gray-200">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl text-yellow-600">{users.filter(u => u.role === 'pharmacy').length}</p>
-              <p className="text-sm text-gray-600 mt-1">Pharmacy</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-gray-200">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl text-red-600">{users.filter(u => u.role === 'admin').length}</p>
-              <p className="text-sm text-gray-600 mt-1">Admins</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Users Table */}
-      <Card className="border-gray-200">
-        <CardHeader>
-          <CardTitle>System Users</CardTitle>
-          <CardDescription>View and manage user access</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Login</TableHead>
-                <TableHead>Actions</TableHead>
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <div className="font-medium">{user.name}</div>
+                  <div className="text-sm text-gray-500">{user.email}</div>
+                </TableCell>
+                <TableCell>
+                  <Badge className={roleColors[user.role] || 'bg-gray-100'}>
+                    {user.role}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={user.status === 'active' ? 'default' : 'destructive'}>
+                    {user.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => handleEditClick(user)}>
+                      <Edit className="w-4 h-4 text-blue-600" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(user.id)}>
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="text-gray-900">{user.name}</TableCell>
-                  <TableCell className="text-gray-600">{user.email}</TableCell>
-                  <TableCell>
-                    <Badge className={roleColors[user.role] + ' hover:' + roleColors[user.role]}>
-                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {user.status === 'active' ? (
-                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>
-                    ) : (
-                      <Badge variant="secondary">Inactive</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-gray-600">{user.lastLogin}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleEditUser(user)}
-                        className="gap-1"
-                      >
-                        <Edit className="h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="gap-1 text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Revoke
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
+            ))}
+          </TableBody>
+        </Table>
       </Card>
 
-      {/* Info Box */}
-      <Card className="border-gray-200 bg-gray-50">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <Shield className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm text-gray-900">Audit and Security</p>
-              <p className="text-sm text-gray-600 mt-1">
-                All user management actions are logged for security auditing. No patient medical data can be edited from this panel.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Add User Dialog */}
+      {/* Add User Dialog (Keeping your existing logic) */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
-            <DialogDescription>Create a new user account and assign role</DialogDescription>
+            <DialogTitle>Create New User Account</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" placeholder="Enter full name" />
+              <Label>Full Name</Label>
+              <Input 
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="user@clinic.com" />
+              <Label>Email Address</Label>
+              <Input 
+                type="email" 
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select>
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
+              <Label>Temporary Password</Label>
+              <Input 
+                type="password" 
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Assign Role</Label>
+              <Select value={formData.role} onValueChange={(val) => setFormData({...formData, role: val})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="doctor">Doctor</SelectItem>
-                  <SelectItem value="staff">Reception Staff</SelectItem>
+                  <SelectItem value="staff">Staff / Reception</SelectItem>
                   <SelectItem value="lab">Lab Technician</SelectItem>
                   <SelectItem value="pharmacy">Pharmacist</SelectItem>
-                  <SelectItem value="admin">Administrator</SelectItem>
+                  <SelectItem value="accountant">Accountant</SelectItem>
+                  <SelectItem value="superadmin">Super Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancel</Button>
-            <Button onClick={() => setShowAddDialog(false)}>Create User</Button>
+            <Button className="bg-blue-600" onClick={handleCreateUser}>Create User</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -244,37 +232,55 @@ export default function RoleManagement() {
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Update user information and role</DialogDescription>
+            <DialogTitle>Edit User Profile</DialogTitle>
+            <DialogDescription>Modify user details or change system permissions.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Full Name</Label>
-              <Input id="edit-name" defaultValue={selectedUser?.name} />
+              <Label>Full Name</Label>
+              <Input 
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-email">Email</Label>
-              <Input id="edit-email" type="email" defaultValue={selectedUser?.email} />
+              <Label>Email Address</Label>
+              <Input 
+                type="email" 
+                value={editFormData.email}
+                onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
+              />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-role">Role</Label>
-              <Select defaultValue={selectedUser?.role}>
-                <SelectTrigger id="edit-role">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="doctor">Doctor</SelectItem>
-                  <SelectItem value="staff">Reception Staff</SelectItem>
-                  <SelectItem value="lab">Lab Technician</SelectItem>
-                  <SelectItem value="pharmacy">Pharmacist</SelectItem>
-                  <SelectItem value="admin">Administrator</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>System Role</Label>
+                <Select value={editFormData.role} onValueChange={(val) => setEditFormData({...editFormData, role: val})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="doctor">Doctor</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
+                    <SelectItem value="lab">Lab</SelectItem>
+                    <SelectItem value="pharmacy">Pharmacy</SelectItem>
+                    <SelectItem value="accountant">Accountant</SelectItem>
+                    <SelectItem value="superadmin">Super Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={editFormData.status} onValueChange={(val) => setEditFormData({...editFormData, status: val})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
-            <Button onClick={() => setShowEditDialog(false)}>Save Changes</Button>
+            <Button className="bg-blue-600" onClick={handleUpdateUser}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -28,26 +28,40 @@ interface CurrentUser {
   role: UserRole;
   name: string;
 }
-
 function App() {
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  // 1. Initialize from localStorage to prevent /undefined on refresh
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => {
+    const saved = localStorage.getItem('user_data');
+    return saved ? JSON.parse(saved) : null;
+  });
 
   const handleLogin = (user: CurrentUser) => {
-    setCurrentUser(user);
+    // 2. Ensure role exists before setting state
+    if (user && user.role) {
+      localStorage.setItem('user_data', JSON.stringify(user));
+      setCurrentUser(user);
+    } else {
+      console.error("Login failed: User role is missing", user);
+    }
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('user_data');
+    localStorage.removeItem('auth_token');
     setCurrentUser(null);
   };
 
   return (
     <Router>
       <Routes>
-        {/* Root */}
         <Route
           path="/"
           element={
-            currentUser ? <Navigate to={`/${currentUser.role}`} replace /> : <Navigate to="/login" replace />
+            currentUser?.role ? (
+              <Navigate to={`/${currentUser.role}`} replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
 
@@ -123,7 +137,7 @@ function App() {
         <Route
           path="/admin/*"
           element={
-            currentUser?.role === 'admin' ? (
+            currentUser?.role === 'admin' || currentUser?.role === 'superadmin' ? (
               <AdminDashboard userName={currentUser.name} onLogout={handleLogout} />
             ) : (
               <Navigate to="/" replace />

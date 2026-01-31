@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
-import { Upload, FileText, Image as ImageIcon, X, Eye } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, X, Eye, Loader } from 'lucide-react';
 import { toast } from 'sonner';
+import { uploadLabReport, deleteLabReport, fetchLabReportsByPatient } from '../services/labReportService';
 
 interface UploadedFile {
   id: string;
@@ -11,46 +12,58 @@ interface UploadedFile {
   size: string;
   uploadDate: string;
   url?: string;
+  original_name?: string;
 }
 
 interface DocumentUploadProps {
   title?: string;
   canRemove?: boolean;
-  onUpload?: (file: File) => void;
+  patientId?: string;
+  category?: string;
+  onUpload?: (file: UploadedFile) => void;
   onRemove?: (fileId: string) => void;
 }
 
 export default function DocumentUpload({ 
   title = 'Upload Documents',
   canRemove = true,
+  patientId,
+  category = 'general',
   onUpload,
   onRemove
 }: DocumentUploadProps) {
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([
-    {
-      id: '1',
-      name: 'Lab_Report_Blood_Test.pdf',
-      type: 'pdf',
-      size: '2.4 MB',
-      uploadDate: '2024-01-10',
-    },
-    {
-      id: '2',
-      name: 'X_Ray_Chest.jpg',
-      type: 'image',
-      size: '1.8 MB',
-      uploadDate: '2024-01-12',
-    },
-  ]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Load existing files when patientId is provided
+  useState(() => {
+    if (patientId) {
+      fetchLabReportsByPatient(patientId)
+        .then((reports) => {
+          const files: UploadedFile[] = reports.map((report) => ({
+            id: report.id,
+            name: report.file_name,
+            type: report.metadata?.mimeType?.includes('pdf') ? 'pdf' : 'image',
+            size: report.metadata?.size ? `${(report.metadata.size / (1024 * 1024)).toFixed(2)} MB` : '0 MB',
+            uploadDate: report.created_at || new Date().toISOString().split('T')[0],
+            original_name: report.metadata?.originalName || report.file_name,
+          }));
+          setUploadedFiles(files);
+        })
+        .catch((err) => {
+          console.error('Failed to load files:', err);
+        });
+    }
+  }, [patientId]);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size must be less than 5MB');
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size must be less than 10MB');
       return;
     }
 
@@ -61,33 +74,51 @@ export default function DocumentUpload({
       return;
     }
 
-    // Create file object
-    const newFile: UploadedFile = {
-      id: Date.now().toString(),
-      name: file.name,
-      type: file.type === 'application/pdf' ? 'pdf' : 'image',
-      size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-      uploadDate: new Date().toISOString().split('T')[0],
-    };
-
-    setUploadedFiles([...uploadedFiles, newFile]);
-    toast.success('File uploaded successfully');
-
-    if (onUpload) {
-      onUpload(file);
+    if (!patientId) {
+      toast.error('Patient ID is required for file upload');
+      return;
     }
 
-    // Reset input
-    event.target.value = '';
+    setLoading(true);
+    try {
+      const result = await uploadLabReport(patientId, file, category);
+
+      // Create file object
+      const newFile: UploadedFile = {
+        id: result.id,
+        name: file.name,
+        type: file.type === 'application/pdf' ? 'pdf' : 'image',
+        size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+        uploadDate: new Date().toISOString().split('T')[0],
+        original_name: file.name,
+      };
+
+      setUploadedFiles([...uploadedFiles, newFile]);
+      toast.success('File uploaded successfully');
+
+      if (onUpload) {
+        onUpload(newFile);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload file');
+    } finally {
+      setLoading(false);
+      event.target.value = '';
+    }
   };
 
-  const handleRemoveFile = (fileId: string, fileName: string) => {
+  const handleRemoveFile = async (fileId: string, fileName: string) => {
     if (window.confirm(`Are you sure you want to remove "${fileName}"?`)) {
-      setUploadedFiles(uploadedFiles.filter(file => file.id !== fileId));
-      toast.success('File removed successfully');
+      try {
+        await deleteLabReport(fileId);
+        setUploadedFiles(uploadedFiles.filter(file => file.id !== fileId));
+        toast.success('File removed successfully');
 
-      if (onRemove) {
-        onRemove(fileId);
+        if (onRemove) {
+          onRemove(fileId);
+        }
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to delete file');
       }
     }
   };
@@ -111,15 +142,22 @@ export default function DocumentUpload({
             className="hidden"
             accept=".pdf,.jpg,.jpeg,.png"
             onChange={handleFileUpload}
+            disabled={loading}
           />
           <label htmlFor="file-upload" className="cursor-pointer">
             <div className="flex flex-col items-center gap-2">
               <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
-                <Upload className="w-6 h-6 text-blue-600" />
+                {loading ? (
+                  <Loader className="w-6 h-6 text-blue-600 animate-spin" />
+                ) : (
+                  <Upload className="w-6 h-6 text-blue-600" />
+                )}
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Click to upload</p>
-                <p className="text-xs text-gray-600">PDF, JPG, PNG (max 5MB)</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {loading ? 'Uploading...' : 'Click to upload'}
+                </p>
+                <p className="text-xs text-gray-600">PDF, JPG, PNG (max 10MB)</p>
               </div>
             </div>
           </label>
@@ -148,7 +186,7 @@ export default function DocumentUpload({
 
                   {/* File Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                    <p className="text-sm font-medium text-gray-900 truncate">{file.original_name || file.name}</p>
                     <p className="text-xs text-gray-600">
                       {file.size} • Uploaded on {new Date(file.uploadDate).toLocaleDateString()}
                     </p>
@@ -172,7 +210,7 @@ export default function DocumentUpload({
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleRemoveFile(file.id, file.name)}
+                      onClick={() => handleRemoveFile(file.id, file.original_name || file.name)}
                       className="h-8 w-8 p-0 hover:bg-red-50"
                     >
                       <X className="w-4 h-4 text-red-600" />
@@ -185,7 +223,7 @@ export default function DocumentUpload({
         )}
 
         {/* No Files Message */}
-        {uploadedFiles.length === 0 && (
+        {uploadedFiles.length === 0 && !loading && (
           <div className="text-center py-6 text-sm text-gray-500">
             No documents uploaded yet
           </div>
@@ -196,7 +234,7 @@ export default function DocumentUpload({
           <p className="font-medium mb-1">Document Guidelines:</p>
           <ul className="list-disc list-inside space-y-1">
             <li>Accepted formats: PDF, JPG, PNG</li>
-            <li>Maximum file size: 5MB</li>
+            <li>Maximum file size: 10MB</li>
             <li>Ensure documents are clear and readable</li>
           </ul>
         </div>

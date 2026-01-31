@@ -3,10 +3,14 @@
 ## Current Endpoints
 
 ### Authentication
-- `POST /api/login` - User login with email and password
+- `POST /api/auth/login` - User login with email and password (returns JWT)
   - Request: `{ email: string, password: string }`
-  - Response: `{ role: string, name: string, email: string, id: string }`
+  - Response: `{ token: string, role: string, name: string, email: string, id: string }`
+- `POST /api/auth/register` - Create user (used by admin or initial setup)
+  - Request: `{ name: string, email: string, password: string, role?: string }`
+  - Response: `{ id, name, email, role }`
 
+**Note:** Use the returned `token` in the `Authorization: Bearer <token>` header for subsequent protected requests.
 ### Health Check
 - `GET /api/health` - Check server and database connection status
   - Response: `{ status: string, database: string }`

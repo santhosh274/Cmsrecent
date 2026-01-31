@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus, AlertTriangle, Check, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Label } from '../ui/label';
+import { fetchPatients, Patient } from '../services/patientService';
+import { toast } from 'sonner';
 
 const medicineDatabase = [
   { id: '1', name: 'Amoxicillin 500mg', category: 'Antibiotic', inStock: true },
@@ -24,8 +28,26 @@ interface PrescribedMedicine {
 export default function PrescriptionFlow() {
   const [searchQuery, setSearchQuery] = useState('');
   const [prescribed, setPrescribed] = useState<PrescribedMedicine[]>([]);
-  const [selectedPatient, setSelectedPatient] = useState('Emma Davis');
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loadingPatients, setLoadingPatients] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    loadPatients();
+  }, []);
+
+  async function loadPatients() {
+    try {
+      const data = await fetchPatients();
+      setPatients(data);
+    } catch (err) {
+      console.error('Failed to fetch patients:', err);
+      toast.error('Failed to load patients');
+    } finally {
+      setLoadingPatients(false);
+    }
+  }
 
   const filteredMedicines = medicineDatabase.filter(med =>
     med.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -46,10 +68,15 @@ export default function PrescriptionFlow() {
   };
 
   const handleSendPrescription = () => {
+    if (!selectedPatient) {
+      toast.error('Please select a patient first');
+      return;
+    }
     setShowSuccess(true);
     setTimeout(() => {
       setShowSuccess(false);
       setPrescribed([]);
+      setSelectedPatient(null);
     }, 3000);
   };
 
@@ -67,7 +94,10 @@ export default function PrescriptionFlow() {
                 </div>
               </div>
               <h2 className="text-2xl text-gray-900">Prescription Sent!</h2>
-              <p className="text-gray-600">Prescription has been successfully sent to pharmacy and patient</p>
+              <p className="text-gray-600">
+                Prescription has been successfully sent to pharmacy and patient
+                {selectedPatient && ` (${selectedPatient.name})`}
+              </p>
               
               <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mt-4">
                 <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
@@ -93,12 +123,50 @@ export default function PrescriptionFlow() {
       {/* Patient Selection */}
       <Card className="border-gray-200 bg-gray-50">
         <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
+          <div className="space-y-4">
             <div>
-              <p className="text-sm text-gray-600">Current Patient</p>
-              <p className="text-lg text-gray-900 mt-1">{selectedPatient}</p>
+              <Label>Select Patient</Label>
+              <Select
+                value={selectedPatient?.id || ''}
+                onValueChange={(id) => {
+                  const patient = patients.find(p => p.id === id);
+                  setSelectedPatient(patient || null);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="-- Select Patient --" />
+                </SelectTrigger>
+                <SelectContent>
+                  {loadingPatients ? (
+                    <SelectItem value="__loading" disabled>
+                      Loading patients...
+                    </SelectItem>
+                  ) : patients.length > 0 ? (
+                    patients.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name} ({p.phone})
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="__none" disabled>
+                      No patients found
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
-            <Button variant="outline">Change Patient</Button>
+            {selectedPatient && (
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                <div>
+                  <p className="text-sm text-gray-600">Current Patient</p>
+                  <p className="text-lg text-gray-900 mt-1">{selectedPatient.name}</p>
+                  <p className="text-sm text-gray-600">{selectedPatient.phone}</p>
+                </div>
+                <Button variant="outline" onClick={() => setSelectedPatient(null)}>
+                  Change Patient
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

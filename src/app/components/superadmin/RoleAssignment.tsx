@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -8,6 +8,7 @@ import { Badge } from '../ui/badge';
 import { UserCog, Search, Plus, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import BackButton from '../shared/BackButton';
+import { fetchUsers, updateUser, User } from '../services/userService';
 
 interface UserRoleMapping {
   id: string;
@@ -21,30 +22,9 @@ export default function RoleAssignment() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [selectedInternalRole, setSelectedInternalRole] = useState<string>('');
+  const [loading, setLoading] = useState(false);
   
-  const [users, setUsers] = useState<UserRoleMapping[]>([
-    {
-      id: '1',
-      userName: 'Admin User',
-      phone: '9876543215',
-      currentRole: 'admin',
-      assignedInternalRole: 'doctor',
-    },
-    {
-      id: '2',
-      userName: 'Sarah Admin',
-      phone: '9876543216',
-      currentRole: 'admin',
-      assignedInternalRole: 'lab',
-    },
-    {
-      id: '3',
-      userName: 'Mike Admin',
-      phone: '9876543217',
-      currentRole: 'admin',
-      assignedInternalRole: 'pharmacy',
-    },
-  ]);
+  const [users, setUsers] = useState<UserRoleMapping[]>([]);
 
   const internalRoles = [
     { value: 'doctor', label: 'Doctor' },
@@ -53,30 +33,74 @@ export default function RoleAssignment() {
     { value: 'pharmacy', label: 'Pharmacist' },
   ];
 
-  const handleAssignRole = () => {
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  async function loadUsers() {
+    setLoading(true);
+    try {
+      const data = await fetchUsers();
+      // Transform User data to UserRoleMapping format
+      const mappedUsers: UserRoleMapping[] = data.map((user: User) => ({
+        id: user.id,
+        userName: user.name,
+        phone: user.email, // Using email as phone since User interface doesn't have phone
+        currentRole: user.role,
+        assignedInternalRole: undefined, // Will be set when assigned
+      }));
+      setUsers(mappedUsers);
+    } catch (err) {
+      console.error('Failed to fetch users', err);
+      toast.error('Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleAssignRole = async () => {
     if (!selectedUser || !selectedInternalRole) {
       toast.error('Please select a user and role');
       return;
     }
 
-    setUsers(users.map(user => 
-      user.id === selectedUser 
-        ? { ...user, assignedInternalRole: selectedInternalRole }
-        : user
-    ));
+    try {
+      // Update the user's role in the database
+      const userToUpdate = users.find(u => u.id === selectedUser);
+      if (userToUpdate) {
+        await updateUser(selectedUser, { role: selectedInternalRole });
+        
+        setUsers(users.map(user => 
+          user.id === selectedUser 
+            ? { ...user, assignedInternalRole: selectedInternalRole, currentRole: selectedInternalRole }
+            : user
+        ));
 
-    toast.success('Internal role assigned successfully');
-    setSelectedUser('');
-    setSelectedInternalRole('');
+        toast.success('Internal role assigned successfully');
+        setSelectedUser('');
+        setSelectedInternalRole('');
+      }
+    } catch (err) {
+      console.error('Failed to assign role', err);
+      toast.error('Failed to assign role');
+    }
   };
 
-  const handleRemoveRole = (userId: string) => {
-    setUsers(users.map(user => 
-      user.id === userId 
-        ? { ...user, assignedInternalRole: undefined }
-        : user
-    ));
-    toast.success('Internal role removed');
+  const handleRemoveRole = async (userId: string) => {
+    try {
+      // Reset the user's role in database to admin or default
+      await updateUser(userId, { role: 'admin' });
+      
+      setUsers(users.map(user => 
+        user.id === userId 
+          ? { ...user, assignedInternalRole: undefined, currentRole: 'admin' }
+          : user
+      ));
+      toast.success('Internal role removed');
+    } catch (err) {
+      console.error('Failed to remove role', err);
+      toast.error('Failed to remove role');
+    }
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -114,17 +138,27 @@ export default function RoleAssignment() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Select User */}
             <div className="space-y-2">
-              <Label htmlFor="user">Select Admin User</Label>
+              <Label htmlFor="user">Select User</Label>
               <Select value={selectedUser} onValueChange={setSelectedUser}>
                 <SelectTrigger id="user">
                   <SelectValue placeholder="Choose user" />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.filter(u => u.currentRole === 'admin').map(user => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.userName} ({user.phone})
+                  {loading ? (
+                    <SelectItem value="__loading" disabled>
+                      Loading users...
                     </SelectItem>
-                  ))}
+                  ) : users.length > 0 ? (
+                    users.map(user => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.userName} ({user.phone})
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="__none" disabled>
+                      No users available
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -183,7 +217,11 @@ export default function RoleAssignment() {
 
             {/* User List */}
             <div className="space-y-3">
-              {filteredUsers.length === 0 ? (
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Loading users...</p>
+                </div>
+              ) : filteredUsers.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <UserCog className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                   <p>No users found</p>
@@ -198,7 +236,7 @@ export default function RoleAssignment() {
                       <div className="flex items-center gap-3">
                         <p className="font-medium text-gray-900">{user.userName}</p>
                         <Badge className="bg-blue-100 text-blue-800" variant="secondary">
-                          Admin
+                          {user.currentRole}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-4 mt-2">

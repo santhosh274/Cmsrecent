@@ -13,6 +13,8 @@ The entire codebase has been refactored to integrate PostgreSQL authentication f
 - ✅ Added health check endpoint (`GET /api/health`)
 - ✅ Added connection pool event handlers
 - ✅ Added comments for future API endpoint structure
+- ✅ Implemented CRUD endpoints for user management (`GET /api/users`, `GET /api/users/:id`, `POST /api/users`, `PUT /api/users/:id`, `DELETE /api/users/:id`)
+- ✅ Implemented patient endpoints (`GET /api/patients`, `GET /api/patients/:id`) used by Lab and Pharmacy dashboards to fetch real patient data
 
 **Role Mapping:**
 - `superadmin` → `superadmin`

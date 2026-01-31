@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { loginApi, setAuthToken } from '../services/authService';
 import { Activity, Lock } from 'lucide-react';
 import { toast } from 'sonner';
-import { loginApi } from '../services/authService';
 
 interface LoginScreenProps {
   onLogin: (user: { role: UserRole; name: string }) => void;
@@ -24,32 +24,29 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
     /^\S+@\S+\.\S+$/.test(email);
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
+  setIsLoading(true);
 
-    if (!isFormValid()) {
-      toast.error('Please fill all fields correctly with a valid email');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const user = await loginApi(email, password);
+  try {
+    const resp = await loginApi(email, password);
+    
+    // Ensure resp.role is exactly what the App expect
+    if (resp.token && resp.role) {
+      setAuthToken(resp.token);
       
-      // Validate that we got a valid role
-      if (!user.role || !user.name) {
-        toast.error('Invalid response from server');
-        return;
-      }
-
-      toast.success(`Welcome back, ${user.name}!`);
-      onLogin({ role: user.role as UserRole, name: user.name });
-    } catch (err: any) {
-      toast.error(err.message || 'Login failed');
-    } finally {
-      setIsLoading(false);
+      onLogin({ 
+        role: resp.role as UserRole, 
+        name: resp.name 
+      }); 
+      
+      toast.success(`Welcome back, ${resp.name}!`);
     }
-  };
+  } catch (err: any) {
+    toast.error(err.message || 'Login failed');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -61,21 +58,21 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
               <Activity className="w-10 h-10 text-white" />
             </div>
           </Link>
-          <h1 className="text-3xl text-gray-900">HealthCare CMS</h1>
+          <h1 className="text-3xl font-bold text-gray-900">HealthCare CMS</h1>
           <p className="text-sm text-gray-600">Secure role-based access to healthcare services</p>
         </div>
 
         {/* Login Form */}
-        <Card className="border-gray-200">
+        <Card className="border-gray-200 shadow-lg">
           <CardHeader>
             <CardTitle>Sign In</CardTitle>
             <CardDescription>Enter your credentials to access your dashboard</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
-              {/* Email */}
+              {/* Email Input */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2">
+                <Label htmlFor="email">
                   Email <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -84,39 +81,60 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  required
                 />
               </div>
 
-              {/* Password */}
+              {/* Password Input */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="flex items-center gap-2">
-                  <Lock className="w-4 h-4" />
-                  Password <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">
+                    Password <span className="text-red-500">*</span>
+                  </Label>
+                  <Link 
+                    to="/forgot-password" 
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+                </div>
               </div>
 
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2"
                 disabled={!isFormValid() || isLoading}
               >
-                {isLoading ? 'Signing In...' : 'Sign In'}
+                {isLoading ? 'Authenticating...' : 'Sign In'}
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        {/* Back to Home */}
-        <div className="text-center">
-          <Link to="/" className="text-sm text-gray-600 hover:text-blue-600">
+        {/* Footer Links */}
+        <div className="text-center space-y-4">
+          <p className="text-sm text-gray-600">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-blue-600 hover:underline font-medium">
+              Register here
+            </Link>
+          </p>
+          <Link to="/" className="text-sm text-gray-500 hover:text-gray-800 flex items-center justify-center gap-1">
             ← Back to Home
           </Link>
         </div>

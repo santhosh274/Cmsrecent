@@ -1,19 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Pill, User, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 import { Label } from '../ui/label';
 import { toast } from 'sonner';
 
 import DashboardLayout from '../shared/DashboardLayout';
 import BillingSummary from '../shared/BillingSummary';
-
-interface Patient {
-  id: string;
-  name: string;
-  phone: string;
-}
+import { fetchPatients, Patient } from '../services/patientService';
 
 interface PharmacistPortalProps {
   userName: string;
@@ -24,47 +25,49 @@ export default function PharmacistPortal({
   userName,
   onLogout,
 }: PharmacistPortalProps) {
-  const [selectedPatient, setSelectedPatient] = useState('');
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const patients: Patient[] = [
-    { id: 'p1', name: 'John Patient', phone: '9876543210' },
-    { id: 'p2', name: 'Sarah Patient', phone: '9876543220' },
-    { id: 'p3', name: 'Mike Patient', phone: '9876543230' },
-  ];
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await fetchPatients();
+        setPatients(data);
+      } catch (err: any) {
+        toast.error(err.message);
+        if (err.message.toLowerCase().includes('unauthorized')) {
+          onLogout();
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [onLogout]);
 
-  const sampleBillingData = {
-    consultationFee: 500,
-    bookingFee: 50,
-    labCharges: 800,
-    medicineCharges: 300,
-    otherFees: 150,
-  };
-
-  const selectedPatientData = patients.find(p => p.id === selectedPatient);
+  const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
   const handleConfirmPayment = () => {
     if (!selectedPatient) {
       toast.error('Please select a patient');
       return;
     }
-    toast.success('Payment confirmed successfully');
+    toast.success(`Payment confirmed for ${selectedPatient.name}`);
   };
 
   return (
     <DashboardLayout
       userName={userName}
       userRole="Pharmacist"
-      navigation={[]}   // No sidebar items for now
+      navigation={[]}
       onLogout={onLogout}
     >
       <div className="space-y-6">
-        {/* Header */}
-        <h1 className="text-3xl text-gray-900 flex items-center gap-3">
+        <h1 className="text-3xl flex items-center gap-3">
           <Pill className="w-8 h-8 text-pink-600" />
           Pharmacist Portal
         </h1>
 
-        {/* Patient Selection */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -72,16 +75,35 @@ export default function PharmacistPortal({
               Select Patient
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <Label htmlFor="patient">Patient</Label>
-            <Select value={selectedPatient} onValueChange={setSelectedPatient}>
-              <SelectTrigger id="patient">
+
+          <CardContent className="space-y-2">
+            <Label>Patient</Label>
+
+            <Select
+              disabled={loading}
+              value={selectedPatientId ?? undefined}
+              onValueChange={setSelectedPatientId}
+            >
+              <SelectTrigger>
                 <SelectValue placeholder="Choose patient for billing" />
               </SelectTrigger>
+
               <SelectContent>
-                {patients.map(patient => (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    {patient.name} - {patient.phone}
+                {loading && (
+                  <SelectItem value="__loading" disabled>
+                    Loading patients...
+                  </SelectItem>
+                )}
+
+                {!loading && patients.length === 0 && (
+                  <SelectItem value="__none" disabled>
+                    No patients found
+                  </SelectItem>
+                )}
+
+                {patients.map(p => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name} — {p.phone}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -89,17 +111,21 @@ export default function PharmacistPortal({
           </CardContent>
         </Card>
 
-        {/* Billing Summary */}
-        {selectedPatient && selectedPatientData && (
+        {selectedPatient && (
           <>
             <BillingSummary
-              patientName={selectedPatientData.name}
-              patientId={selectedPatientData.id.toUpperCase()}
-              billingData={sampleBillingData}
+              patientName={selectedPatient.name}
+              patientId={selectedPatient.id.toUpperCase()}
+              billingData={{
+                consultationFee: 500,
+                bookingFee: 50,
+                labCharges: 800,
+                medicineCharges: 300,
+                otherFees: 150,
+              }}
               readOnly={false}
             />
 
-            {/* Payment Actions */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -107,6 +133,7 @@ export default function PharmacistPortal({
                   Payment Actions
                 </CardTitle>
               </CardHeader>
+
               <CardContent className="space-y-3">
                 <Button
                   onClick={handleConfirmPayment}
@@ -130,13 +157,6 @@ export default function PharmacistPortal({
               </CardContent>
             </Card>
           </>
-        )}
-
-        {!selectedPatient && (
-          <div className="text-center py-12 text-gray-500">
-            <Pill className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-            <p>Select a patient to view billing and process payment</p>
-          </div>
         )}
       </div>
     </DashboardLayout>

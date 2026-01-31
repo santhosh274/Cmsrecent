@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Microscope,
   User,
@@ -14,19 +14,7 @@ import { Label } from '../ui/label';
 import { toast } from 'sonner';
 
 import DashboardLayout from '../shared/DashboardLayout';
-
-interface Patient {
-  id: string;
-  name: string;
-  phone: string;
-  familyMembers: FamilyMember[];
-}
-
-interface FamilyMember {
-  id: string;
-  name: string;
-  relationship: string;
-}
+import { fetchPatients, fetchPatientById, Patient } from '../services/patientService';
 
 interface LabPortalProps {
   userName: string;
@@ -40,34 +28,43 @@ export default function LabPortal({
   const [selectedPatient, setSelectedPatient] = useState('');
   const [selectedMember, setSelectedMember] = useState('self');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loadingPatients, setLoadingPatients] = useState(false);
+  const [selectedPatientData, setSelectedPatientData] = useState<Patient | undefined>(undefined);
 
-  const patients: Patient[] = [
-    {
-      id: 'p1',
-      name: 'John Patient',
-      phone: '9876543210',
-      familyMembers: [
-        { id: 'fm1', name: 'Sarah Patient', relationship: 'Spouse' },
-        { id: 'fm2', name: 'Tom Patient', relationship: 'Son' },
-      ],
-    },
-    {
-      id: 'p2',
-      name: 'Sarah Patient',
-      phone: '9876543220',
-      familyMembers: [],
-    },
-    {
-      id: 'p3',
-      name: 'Mike Patient',
-      phone: '9876543230',
-      familyMembers: [
-        { id: 'fm3', name: 'Lisa Patient', relationship: 'Spouse' },
-      ],
-    },
-  ];
+  // Fetch patient list on mount
+  useEffect(() => {
+    async function loadPatients() {
+      setLoadingPatients(true);
+      try {
+        const data = await fetchPatients();
+        setPatients(data);
+      } catch (err) {
+        console.error('Failed to fetch patients:', err);
+        toast.error('Failed to load patients');
+      } finally {
+        setLoadingPatients(false);
+      }
+    }
+    loadPatients();
+  }, []);
 
-  const selectedPatientData = patients.find(p => p.id === selectedPatient);
+  // Fetch details for selected patient (family members etc.)
+  useEffect(() => {
+    if (!selectedPatient) {
+      setSelectedPatientData(undefined);
+      return;
+    }
+    async function loadPatientDetails() {
+      try {
+        const data = await fetchPatientById(selectedPatient);
+        setSelectedPatientData(data);
+      } catch (err) {
+        console.error('Failed to fetch patient details:', err);
+      }
+    }
+    loadPatientDetails();
+  }, [selectedPatient]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -103,7 +100,7 @@ export default function LabPortal({
     <DashboardLayout
       userName={userName}
       userRole="Lab Technician"
-      navigation={[]}   // add sidebar items later if needed
+      navigation={[]}
       onLogout={onLogout}
     >
       <div className="space-y-6">
@@ -134,18 +131,28 @@ export default function LabPortal({
                 <SelectValue placeholder="Choose patient" />
               </SelectTrigger>
               <SelectContent>
-                {patients.map(p => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} - {p.phone}
+                {loadingPatients ? (
+                  <SelectItem value="__loading" disabled aria-disabled>
+                    Loading patients...
                   </SelectItem>
-                ))}
+                ) : patients.length ? (
+                  patients.map(p => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name} - {p.phone}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="__none" disabled aria-disabled>
+                    No patients found
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
           </CardContent>
         </Card>
 
         {/* Family Member */}
-        {selectedPatientData && selectedPatientData.familyMembers.length > 0 && (
+        {selectedPatientData && selectedPatientData.family_members && selectedPatientData.family_members.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -163,7 +170,7 @@ export default function LabPortal({
                   <SelectItem value="self">
                     {selectedPatientData.name} (Self)
                   </SelectItem>
-                  {selectedPatientData.familyMembers.map(m => (
+                  {selectedPatientData.family_members.map(m => (
                     <SelectItem key={m.id} value={m.id}>
                       {m.name} ({m.relationship})
                     </SelectItem>
