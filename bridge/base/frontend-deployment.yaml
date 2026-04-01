@@ -1,0 +1,36 @@
+#! frontend-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: frontend
+    namespace: cmsrecent
+    labels:
+        com.docker.compose.project: cmsrecent
+        com.docker.compose.service: frontend
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: cmsrecent
+            com.docker.compose.service: frontend
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: cmsrecent
+                com.docker.compose.service: frontend
+                com.docker.compose.network.default: "true"
+        spec:
+            restartPolicy: Always
+            containers:
+                - name: cms-frontend
+                  image: cmsrecent-frontend
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: VITE_API_BASE_URL
+                      value: "http://backend:5000"
+                  ports:
+                    - name: frontend-5173
+                      containerPort: 5173

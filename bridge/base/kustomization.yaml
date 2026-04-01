@@ -1,0 +1,19 @@
+#! kustomization.yaml
+# Generated code, do not edit
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - 0-cmsrecent-namespace.yaml
+    - backend-deployment.yaml
+    - backend-expose.yaml
+    - backend-service.yaml
+    - db-D:\script\cms_ext\Cmsrecent\server\schema.sql-persistentVolumeClaim.yaml
+    - db-D:\script\cms_ext\Cmsrecent\server\seeds.sql-persistentVolumeClaim.yaml
+    - db-db-data-persistentVolumeClaim.yaml
+    - db-deployment.yaml
+    - db-expose.yaml
+    - db-service.yaml
+    - default-network-policy.yaml
+    - frontend-deployment.yaml
+    - frontend-expose.yaml
+    - frontend-service.yaml

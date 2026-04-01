@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: cms_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cms_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./server/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./server/seeds.sql:/docker-entrypoint-initdb.d/2-seeds.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./server
+    container_name: cms_backend
+    restart: always
+    environment:
+      NODE_ENV: development
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: cms_db
+      JWT_SECRET: e35468cd584322fad239ddc69e7ea0b88421c2f18140bdd7354ee7ccf517fcf6
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+    container_name: cms_frontend
+    restart: always
+    environment:
+      VITE_API_BASE_URL: http://backend:5000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:

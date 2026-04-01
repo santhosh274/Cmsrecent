@@ -2,6 +2,7 @@ import express from 'express';
 // FIXED: Import query from index.js where the Pool is actually configured
 import { query } from '../index.js'; 
 import { authenticate, authorizeRoles } from '../middleware/auth.js';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
@@ -48,6 +49,44 @@ router.get('/', authenticate, authorizeRoles('superadmin'), async (req, res) => 
 });
 
 /**
+ * POST /api/users
+ * Create a new user (Superadmin only)
+ */
+router.post('/', authenticate, authorizeRoles('superadmin'), async (req, res) => {
+  const { name, email, role, password } = req.body;
+
+  if (!name || !email || !role || !password) {
+    return res.status(400).json({ error: 'Name, email, role, and password are required' });
+  }
+
+  try {
+    // Check if user already exists
+    const existingUser = await query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existingUser.rows.length > 0) {
+      return res.status(409).json({ error: 'User with this email already exists' });
+    }
+
+    // Hash the password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const result = await query(
+      `INSERT INTO users (email, password_hash, role, name, status, created_at)
+       VALUES ($1, $2, $3, $4, 'active', NOW())
+       RETURNING id, name, email, role, status`,
+      [email, passwordHash, role, name]
+    );
+
+    return res.status(201).json({
+      message: 'User created successfully',
+      user: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Create User Error:', err);
+    return res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
+/**
  * PUT /api/users/:id
  * Update user details
  */
@@ -78,6 +117,27 @@ router.put('/:id', authenticate, authorizeRoles('superadmin'), async (req, res) 
   } catch (err) {
     console.error('Update Error:', err);
     return res.status(500).json({ error: 'Server error during update' });
+  }
+});
+
+/**
+ * DELETE /api/users/:id
+ * Delete a user (Superadmin only)
+ */
+router.delete('/:id', authenticate, authorizeRoles('superadmin'), async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    console.error('Delete User Error:', err);
+    return res.status(500).json({ error: 'Failed to delete user' });
   }
 });
 

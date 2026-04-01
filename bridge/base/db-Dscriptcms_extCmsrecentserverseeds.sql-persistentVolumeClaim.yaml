@@ -1,0 +1,18 @@
+#! db-D:\script\cms_ext\Cmsrecent\server\seeds.sql-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: db-d--script-cms-ext-cmsrecent-server-seeds-sql
+    namespace: cmsrecent
+    labels:
+        com.docker.compose.service: db
+        com.docker.compose.volume: D:\script\cms_ext\Cmsrecent\server\seeds.sql
+spec:
+    accessModes:
+        # TODO would need to check which services use this volume
+        - ReadWriteOnce
+    volumeMode: Filesystem
+    resources:
+        requests:
+            storage: 100Mi

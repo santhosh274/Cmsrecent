@@ -58,6 +58,7 @@ export async function updateUser(id: string, data: {
   name?: string;
   email?: string;
   role?: string;
+  status?: string;
 }): Promise<User> {
   const token = getAuthToken();
 

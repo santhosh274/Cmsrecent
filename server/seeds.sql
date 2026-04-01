@@ -1,11 +1,13 @@
 -- 1. SEED ALL SYSTEM USERS
 -- Password for all: 'password123' (Pre-hashed for Bcrypt)
+-- Hash: password123 -> $2a$10$sOdT5.G3Gj2Gj0Rpp8EtguB9xOmjpWEcBJZSczePyF40tcbyTb2mi
 INSERT INTO users (id, email, password_hash, role, name, status)
 VALUES
-  (gen_random_uuid(), 'admin@cms.com', '$2a$10$YcM0bK3pN8RzTt4S1mYxEO6kA5r...', 'superadmin', 'Santhosh Admin', 'active'),
-  (gen_random_uuid(), 'doctor@cms.com', '$2a$10$YcM0bK3pN8RzTt4S1mYxEO6kA5r...', 'doctor', 'Dr. Alice Smith', 'active'),
-  (gen_random_uuid(), 'pharmacy@cms.com', '$2a$10$YcM0bK3pN8RzTt4S1mYxEO6kA5r...', 'pharmacist', 'James Pharmacist', 'active'),
-  (gen_random_uuid(), 'lab@cms.com', '$2a$10$YcM0bK3pN8RzTt4S1mYxEO6kA5r...', 'lab_tech', 'Robert LabTech', 'active');
+  ('11111111-1111-1111-1111-111111111111', 'admin@cms.com', '$2a$10$sOdT5.G3Gj2Gj0Rpp8EtguB9xOmjpWEcBJZSczePyF40tcbyTb2mi', 'superadmin', 'Santhosh Admin', 'active'),
+  ('22222222-2222-2222-2222-222222222222', 'doctor@cms.com', '$2a$10$sOdT5.G3Gj2Gj0Rpp8EtguB9xOmjpWEcBJZSczePyF40tcbyTb2mi', 'doctor', 'Dr. Alice Smith', 'active'),
+  ('33333333-3333-3333-3333-333333333333', 'pharmacy@cms.com', '$2a$10$sOdT5.G3Gj2Gj0Rpp8EtguB9xOmjpWEcBJZSczePyF40tcbyTb2mi', 'pharmacy', 'James Pharmacist', 'active'),
+  ('44444444-4444-4444-4444-444444444444', 'lab@cms.com', '$2a$10$sOdT5.G3Gj2Gj0Rpp8EtguB9xOmjpWEcBJZSczePyF40tcbyTb2mi', 'lab', 'Robert LabTech', 'active');
+
 
 -- 2. SEED PATIENTS (Parent table for clinical data)
 -- Using fixed UUIDs for consistent linking in this seed file
@@ -26,14 +28,14 @@ INSERT INTO appointments (patient_id, doctor_id, scheduled_at, reason, status)
 VALUES
   (
     'a1111111-1111-1111-1111-111111111111', 
-    (SELECT id FROM users WHERE role = 'doctor' LIMIT 1), 
+    '22222222-2222-2222-2222-222222222222', 
     NOW() + INTERVAL '2 hours', 
     'Severe headache and fever', 
     'scheduled'
   ),
   (
     'b2222222-2222-2222-2222-222222222222', 
-    (SELECT id FROM users WHERE role = 'doctor' LIMIT 1), 
+    '22222222-2222-2222-2222-222222222222', 
     NOW() + INTERVAL '1 day', 
     'Routine follow-up', 
     'scheduled'
@@ -53,7 +55,7 @@ INSERT INTO lab_reports (patient_id, uploaded_by, file_name, metadata)
 VALUES
   (
     'a1111111-1111-1111-1111-111111111111', 
-    (SELECT id FROM users WHERE role = 'lab_tech' LIMIT 1), 
+    '44444444-4444-4444-4444-444444444444', 
     'blood_test_results.pdf', 
     '{"type": "Blood Work", "result": "Normal"}'
   );

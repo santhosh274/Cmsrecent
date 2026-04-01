@@ -1,0 +1,48 @@
+#! backend-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: backend
+    namespace: cmsrecent
+    labels:
+        com.docker.compose.project: cmsrecent
+        com.docker.compose.service: backend
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: cmsrecent
+            com.docker.compose.service: backend
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: cmsrecent
+                com.docker.compose.service: backend
+                com.docker.compose.network.default: "true"
+        spec:
+            restartPolicy: Always
+            containers:
+                - name: cms-backend
+                  image: cmsrecent-backend
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: DB_HOST
+                      value: "db"
+                    - name: DB_NAME
+                      value: "cms_db"
+                    - name: DB_PASS
+                      value: "postgres"
+                    - name: DB_PORT
+                      value: "5432"
+                    - name: DB_USER
+                      value: "postgres"
+                    - name: JWT_SECRET
+                      value: "e35468cd584322fad239ddc69e7ea0b88421c2f18140bdd7354ee7ccf517fcf6"
+                    - name: NODE_ENV
+                      value: "development"
+                  ports:
+                    - name: backend-5000
+                      containerPort: 5000

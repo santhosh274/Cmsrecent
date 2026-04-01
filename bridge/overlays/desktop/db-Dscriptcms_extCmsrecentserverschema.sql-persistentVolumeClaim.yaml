@@ -1,0 +1,9 @@
+#! db-D:\script\cms_ext\Cmsrecent\server\schema.sql-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: db-d--script-cms-ext-cmsrecent-server-schema-sql
+    namespace: cmsrecent
+spec:
+    storageClassName: "hostpath" # see docker/desktop-storage-provisioner
